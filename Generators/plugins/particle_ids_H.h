@@ -1,0 +1,15 @@
+// particle ids
+const signed int particleId_Z = 23;
+const signed int particleId_H = 25;
+const signed int particleId_X = 1000022;
+//const signed int particleId_f1 = 999997;
+const signed int particleId_f1 = 14;
+//const signed int particleId_f2 = 999996;
+const signed int particleId_f2 = -14;
+const signed int particleId_p = 2212;
+const signed int particleId_e_mi = +11;
+const signed int particleId_e_pl = -11;
+const signed int particleId_mu_mi = +13;
+const signed int particleId_mu_pl = -13;
+const signed int particleId_b_pl = +5;
+const signed int particleId_b_mi = -5;
