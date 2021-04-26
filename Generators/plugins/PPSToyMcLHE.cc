@@ -27,7 +27,7 @@
 #include "SimDataFormats/GeneratorProducts/interface/LHERunInfoProduct.h"
 #include "SimDataFormats/GeneratorProducts/interface/LHEXMLStringProduct.h"
 #include "GeneratorInterface/LHEInterface/interface/LHEReader.h"
-#include "SimCTPPS/Generators/plugins/particles_ids.h"
+#include "ppXToyMC/Generators/plugins/particles_ids.h"
 #include "CLHEP/Units/SystemOfUnits.h"
 #include "CLHEP/Units/PhysicalConstants.h"
 #include <cmath>

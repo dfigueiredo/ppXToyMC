@@ -29,7 +29,7 @@
 #include "TProfile.h"
 #include "TGraphErrors.h"
 
-#include "SimCTPPS/Generators/plugins/particle_ids_H.h"
+#include "ppXToyMC/Generators/plugins/particle_ids_H.h"
 
 //----------------------------------------------------------------------------------------------------
 

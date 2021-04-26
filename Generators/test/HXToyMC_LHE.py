@@ -2,29 +2,33 @@
 
 import sys
 from FWCore.ParameterSet.VarParsing import VarParsing
+import FWCore.ParameterSet.Config as cms
 
 # Setting Input Parameters from Line Command
 options = VarParsing ('analysis')
 options.register('Mass',850,VarParsing.multiplicity.singleton, VarParsing.varType.int,"X Mass")
 options.parseArguments()
 
-print("")
-print("Mass: %s"%options.Mass)
-print("")
+process = cms.Process("CTPPSDirectSimulation")
 
-import FWCore.ParameterSet.Config as cms
+process.RandomNumberGeneratorService = cms.Service("RandomNumberGeneratorService",
 
-# random seeds
-RandomNumberGeneratorService = cms.Service("RandomNumberGeneratorService",
-  sourceSeed = cms.PSet(initialSeed = cms.untracked.uint32(98765)),
-  generator = cms.PSet(initialSeed = cms.untracked.uint32(98766)),
-  beamDivergenceVtxGenerator = cms.PSet(initialSeed = cms.untracked.uint32(3849)),
-  ctppsDirectProtonSimulation = cms.PSet(initialSeed = cms.untracked.uint32(4981))
-)
+    # Include a PSet for each module label that needs a
+    # random engine.  The name is the module label.
+    # You must supply a seed or seeds.
+    # Optionally an engine type can be specified
 
-# number of events
-process.maxEvents = cms.untracked.PSet(
-  input = cms.untracked.int32(500)
+    generator = cms.PSet(
+        initialSeed = cms.untracked.uint32(81),
+        engineName = cms.untracked.string('TRandom3') #HepJamesRandom, RanecuEngine 
+    )
+
+    # This is optional.  If you want the service to save the state
+    # of all engines to a separate text file which is overwritten before
+    # modules begin processing on each event. The text file is only
+    # needed for one type of replay. The filename can be anything
+    # you want but the replay process will need to reference it.
+    #,saveFileName = cms.untracked.string('RandomEngineStates.txt')
 )
 
 # redefine particle generator
@@ -36,57 +40,20 @@ process.generator.m_f = (options.Mass - 200)/2
 process.generator.decayX = True
 process.generator.decayHToBottoms = True
 
-# distribution plotter
-process.ctppsTrackDistributionPlotter = cms.EDAnalyzer("CTPPSTrackDistributionPlotter",
-  tagTracks = cms.InputTag("ctppsLocalTrackLiteProducer"),
-  outputFile = cms.string("output.root")
+# This is optional.  If you want the service to save the state
+# of all engines to each Event and LuminosityBlock, then
+# include this producer here and in the path.  This is only
+# needed for one type of replay.  The module label can be
+# anything, but the replay process will need to reference it.
+process.randomEngineStateProducer = cms.EDProducer("RandomEngineStateProducer")
+
+# The RandomNumberGeneratorService should work with
+# any kind of source
+process.source = cms.Source("EmptySource")
+
+process.maxEvents = cms.untracked.PSet(
+    input = cms.untracked.int32(2000)
 )
 
-# acceptance plotter
-process.ctppsAcceptancePlotter = cms.EDAnalyzer("CTPPSAcceptancePlotter",
-  tagHepMC = cms.InputTag("generator", "unsmeared"),
-  tagTracks = cms.InputTag("ctppsLocalTrackLiteProducer"),
-
-  rpId_45_F = process.rpIds.rp_45_F,
-  rpId_45_N = process.rpIds.rp_45_N,
-  rpId_56_N = process.rpIds.rp_56_N,
-  rpId_56_F = process.rpIds.rp_56_F,
-
-  outputFile = cms.string("acceptance.root")
-)
-
-# generator plots
-process.load("ppXToyMC.Generators.PPXHGeneratorValidation_cfi")
-process.ppxhGeneratorValidation.tagHepMC = cms.InputTag("generator", "unsmeared")
-process.ppxhGeneratorValidation.tagRecoTracks = cms.InputTag("ctppsLocalTrackLiteProducer")
-process.ppxhGeneratorValidation.tagRecoProtonsSingleRP = cms.InputTag("ctppsProtons", "singleRP")
-process.ppxhGeneratorValidation.tagRecoProtonsMultiRP = cms.InputTag("ctppsProtons", "multiRP")
-process.ppxhGeneratorValidation.referenceRPDecId_45 = process.rpIds.rp_45_F
-process.ppxhGeneratorValidation.referenceRPDecId_56 = process.rpIds.rp_56_F
-process.ppxhGeneratorValidation.outputFile = "ppxhGeneratorValidation.root"
-
-# processing path
-process.p = cms.Path(
-  process.generator
-  #*process.ppxhGeneratorValidation
-  #*process.ctppsAcceptancePlotter
-)
-
-# output configuration
-#process.output = cms.OutputModule("PoolOutputModule",
-#  fileName = cms.untracked.string("output.root"),
-#  splitLevel = cms.untracked.int32(0),
-#  eventAutoFlushCompressedSize=cms.untracked.int32(-900),
-#  compressionAlgorithm=cms.untracked.string("LZMA"),
-#  compressionLevel=cms.untracked.int32(9),
-#  outputCommands = cms.untracked.vstring(
-#    'drop *',
-#    'keep edmHepMCProduct_*_*_*',
-#    'keep LHE*_*_*_*',
-#    'keep CTPPSLocalTrackLites_*_*_*',
-#    'keep recoForwardProtons_*_*_*'
-#  )
-#)
-
-process.outpath = cms.EndPath(process.output)
+process.p = cms.Path(process.generator+process.randomEngineStateProducer)
 

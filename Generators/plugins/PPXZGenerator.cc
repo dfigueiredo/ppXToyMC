@@ -21,7 +21,7 @@
 
 #include "SimDataFormats/GeneratorProducts/interface/HepMCProduct.h"
 
-#include "SimCTPPS/Generators/plugins/particle_ids.h"
+#include "ppXToyMC/Generators/plugins/particle_ids.h"
 
 //----------------------------------------------------------------------------------------------------
   
