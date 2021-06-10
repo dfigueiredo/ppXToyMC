@@ -52,7 +52,7 @@ process.randomEngineStateProducer = cms.EDProducer("RandomEngineStateProducer")
 process.source = cms.Source("EmptySource")
 
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(2000)
+    input = cms.untracked.int32(10000)
 )
 
 process.p = cms.Path(process.generator+process.randomEngineStateProducer)

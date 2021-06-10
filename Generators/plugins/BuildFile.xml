@@ -1,13 +1,15 @@
 <use name="FWCore/Framework"/>
 <use name="FWCore/Utilities"/>
 <use name="FWCore/ParameterSet"/>
-
+<use name="FWCore/PluginManager"/>
+<use name="FWCore/MessageLogger"/>
 <use name="SimDataFormats/GeneratorProducts"/>
-
 <use name="DataFormats/CTPPSDetId"/>
 <use name="DataFormats/ProtonReco"/>
-
+<use name="DataFormats/JetReco"/>
+<use name="FWCore/Common"/>
+<use name="CommonTools/UtilAlgos"/>
+<use name="FWCore/ServiceRegistry"/>
+<use name="rootcore"/>
 <use name="clhep"/>
 <use name="hepmc"/>
-
-<flags EDM_PLUGIN="1"/>

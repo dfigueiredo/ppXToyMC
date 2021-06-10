@@ -11,8 +11,11 @@
 #include "FWCore/Utilities/interface/RandomNumberGenerator.h"
 #include "FWCore/Framework/interface/MakerMacros.h"
 #include "CLHEP/Random/RandFlat.h"
+#include "CLHEP/Random/RandPoisson.h"
+#include "CLHEP/Random/RandGamma.h"
 #include "CLHEP/Random/RandGauss.h"
 #include "CLHEP/Random/RandExponential.h"
+#include "CLHEP/Random/RandChiSquare.h"
 #include "CLHEP/Random/RandBreitWigner.h"
 #include "CLHEP/Vector/LorentzVector.h"
 #include "CLHEP/Vector/ThreeVector.h"
@@ -46,7 +49,7 @@ class PPSToyMcLHE : public edm::one::EDProducer<edm::BeginRunProducer, edm::EndR
     virtual void produce(edm::Event & e, const edm::EventSetup& es) override;
     void beginRunProduce(edm::Run &run, edm::EventSetup const &es) override;
     void endRunProduce(edm::Run &, edm::EventSetup const &) override;
-    void fillEventLHE(lhef::HEPEUP &outlhe, CLHEP::HepLorentzVector &particle, int pdgid, double status);
+    void fillEventLHE(lhef::HEPEUP &outlhe, CLHEP::HepLorentzVector &particle, int pdgid, double status, double spin);
 
     LHERunInfoProduct::Header SLHA();
 
@@ -171,22 +174,16 @@ void PPSToyMcLHE::endRunProduce(edm::Run &run, edm::EventSetup const &es) {
 void PPSToyMcLHE::fillEventLHE(lhef::HEPEUP &outlhe, 
     CLHEP::HepLorentzVector &particle, 
     int pdgid, 
-    double status) {
+    double status, double spin) {
 
   int index = outlhe.NUP;
   outlhe.resize(outlhe.NUP + 1);
 
-  //outlhe.IDPRUP = 1;
-  //outlhe.XWGTUP = 2.8167496e-08;
-  //outlhe.SCALUP = 1; 
-  //outlhe.AQEDUP = 7.29929980e-03;
-  //outlhe.AQCDUP = -1;
-
-  outlhe.IDPRUP = -1;
-  outlhe.XWGTUP = -1;
+  outlhe.IDPRUP = 1;
+  outlhe.XWGTUP = 2.8167496e-08;
   outlhe.SCALUP = 1; 
-  outlhe.AQEDUP = -1;
-  outlhe.AQCDUP = -1;
+  outlhe.AQEDUP = 7.29929980e-03;
+  outlhe.AQCDUP = 9.87552740e-02;
 
   outlhe.PUP[index][0] = particle.px();
   outlhe.PUP[index][1] = particle.py();
@@ -195,6 +192,7 @@ void PPSToyMcLHE::fillEventLHE(lhef::HEPEUP &outlhe,
 
   if(pdgid==2212 || pdgid==-2212){
     outlhe.PUP[index][4] = 9.38270000000e-01;
+    outlhe.SPINUP[index] = spin; // added later
   }else{
     outlhe.PUP[index][4] = particle.m();
   }
@@ -258,6 +256,8 @@ void PPSToyMcLHE::produce(edm::Event &e, const edm::EventSetup& es)
   fEvt->add_vertex(vtx);
 
   double m_H = -1., m_S= -1., m_X = -1.;
+  double px_1 = -1., py_1 = -1.;
+  double px_2 = -1., py_2 = -1.;
 
   // 4-momenta of the outgoing particles in the LAB frame
   CLHEP::HepLorentzVector momentum_H;
@@ -274,6 +274,11 @@ void PPSToyMcLHE::produce(edm::Event &e, const edm::EventSetup& es)
     m_H = CLHEP::RandBreitWigner::shoot(engine, m_H_mean, m_H_gamma);
     m_S = CLHEP::RandBreitWigner::shoot(engine, m_S_mean, m_S_gamma);
     m_X = CLHEP::RandBreitWigner::shoot(engine, m_X_mean, m_X_gamma);
+
+    px_1 = CLHEP::RandGauss::shoot(engine, 0., 0.1);
+    py_1 = CLHEP::RandGauss::shoot(engine, 0., 0.1);
+    px_2 = CLHEP::RandGauss::shoot(engine, 0., 0.1);
+    py_2 = CLHEP::RandGauss::shoot(engine, 0., 0.1);
 
     if (m_H < 0. || m_S < m_H + m_X) continue;
 
@@ -342,8 +347,9 @@ void PPSToyMcLHE::produce(edm::Event &e, const edm::EventSetup& es)
     momentum_p1i = CLHEP::HepLorentzVector(0., 0., +p_beam, p_beam);
     momentum_p2i = CLHEP::HepLorentzVector(0., 0., -p_beam, p_beam);
 
-    momentum_p1 = CLHEP::HepLorentzVector(0., 0., +p_beam * (1. - xi1), p_beam * (1. - xi1));
-    momentum_p2 = CLHEP::HepLorentzVector(0., 0., -p_beam * (1. - xi2), p_beam * (1. - xi2));
+    // Small smearing in px and py for emulating "diffractive" pseudorapidity-like proton
+    momentum_p1 = CLHEP::HepLorentzVector(px_1, py_1, +p_beam * (1. - xi1), p_beam * (1. - xi1));
+    momentum_p2 = CLHEP::HepLorentzVector(px_2, py_2, -p_beam * (1. - xi2), p_beam * (1. - xi2));
 
     if (verbosity)
     {
@@ -390,15 +396,15 @@ void PPSToyMcLHE::produce(edm::Event &e, const edm::EventSetup& es)
   particle_p2->suggest_barcode(++barcode);
   vtx->add_particle_out(particle_p2);
 
-  fillEventLHE(hepeup, momentum_p1i, particleId_p, -1);
-  fillEventLHE(hepeup, momentum_p2i, particleId_p, -1);
-  fillEventLHE(hepeup, momentum_p1, particleId_p, 1);
-  fillEventLHE(hepeup, momentum_p2, particleId_p, 1);
+  fillEventLHE(hepeup, momentum_p1i, particleId_p, -1, -1);
+  fillEventLHE(hepeup, momentum_p2i, particleId_p, -1, -1);
+  fillEventLHE(hepeup, momentum_p1, particleId_p, 1, 1);
+  fillEventLHE(hepeup, momentum_p2, particleId_p, 1, 1);
 
 
   // X and its decays...
-  fillEventLHE(hepeup, momentum_S, 51, 2); // DM (S) -> H + X
-  fillEventLHE(hepeup, momentum_X, particleId_X, 2);
+  fillEventLHE(hepeup, momentum_S, 51, 2, 0); // DM (S) -> H + X
+  fillEventLHE(hepeup, momentum_X, particleId_X, 2, 0);
   if (decayX)
   {
     // generate decay angles in X's rest frame;
@@ -451,17 +457,17 @@ void PPSToyMcLHE::produce(edm::Event &e, const edm::EventSetup& es)
 
     if(isnan(M2)||isnan(p_f) || isnan(E_f1) ||isnan(E_f2)||isnan(cos_theta_d)||isnan(sin_theta_d)||isnan(phi_d)||isnan(beta)){
       edm::LogWarning("PPSToyMcLHE") << "--NAN--";
-      fillEventLHE(hepeup, zero, particleId_f1, 1);
-      fillEventLHE(hepeup, zero, particleId_f2, 1);
+      fillEventLHE(hepeup, zero, particleId_f1, 1, 0);
+      fillEventLHE(hepeup, zero, particleId_f2, 1, 0);
     }else{
-      fillEventLHE(hepeup, momentum_f1, particleId_f1, 1);
-      fillEventLHE(hepeup, momentum_f2, particleId_f2, 1);
+      fillEventLHE(hepeup, momentum_f1, particleId_f1, 1, 0);
+      fillEventLHE(hepeup, momentum_f2, particleId_f2, 1, 0);
     }
 
   }
 
   // H and its decays...
-  fillEventLHE(hepeup, momentum_H, particleId_H, 2);
+  fillEventLHE(hepeup, momentum_H, particleId_H, 2, 0);
 
   if (decayHToBottoms)
   {
@@ -518,11 +524,11 @@ void PPSToyMcLHE::produce(edm::Event &e, const edm::EventSetup& es)
 
     if(isnan(E_l) ||isnan(p_l)||isnan(cos_theta_d)||isnan(sin_theta_d)||isnan(phi_d)||isnan(beta)){
       edm::LogWarning("PPSToyMcLHE") << "--NAN--";
-      fillEventLHE(hepeup, zero, particleId_l_mi, 1);
-      fillEventLHE(hepeup, zero, particleId_l_pl, 1);
+      fillEventLHE(hepeup, zero, particleId_l_mi, 1, 0);
+      fillEventLHE(hepeup, zero, particleId_l_pl, 1, 0);
     }else{
-      fillEventLHE(hepeup, momentum_l_mi, particleId_l_mi, 1);
-      fillEventLHE(hepeup, momentum_l_pl, particleId_l_pl, 1);
+      fillEventLHE(hepeup, momentum_l_mi, particleId_l_mi, 1, 0);
+      fillEventLHE(hepeup, momentum_l_pl, particleId_l_pl, 1, 0);
     }
 
   }
@@ -532,7 +538,8 @@ void PPSToyMcLHE::produce(edm::Event &e, const edm::EventSetup& es)
   output->addHepMCData(fEvt);
   e.put(std::move(output), "unsmeared");
 
-  double originalXWGTUP_ = 1.;
+  //double originalXWGTUP_ = 1.;
+  double originalXWGTUP_ = 2.8167496e-08;
   std::unique_ptr<LHEEventProduct> LHEevent_(new LHEEventProduct(hepeup, originalXWGTUP_));
 
   if(writeLHE){
