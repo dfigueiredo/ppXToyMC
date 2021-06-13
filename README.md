@@ -22,3 +22,25 @@ scram b -j 8
 cd test/
 cmsRun HXToyMC_LHE.py 
 ```
+
+## Validation
+
+There is a script "test/GenParticleShow.py" that can be used to cross check your CMSSW GEN collection. It is possible to printout the protons, particle flow (PF) and GenJets kinematics. Furthermore, a tree file is produced for futher analysis.
+
+```bash
+cd test/
+cmsRun GenParticleShow.py
+```
+
+There are options flags that can be used:
+
+```python
+process.genParticle = cms.EDAnalyzer("GenParticleShow",
+					    GenPartTag = cms.InputTag('genParticles'),
+					    GenJetTag = cms.InputTag('ak4GenJets'),
+					    EBeam = cms.double(6500.),
+					    DebugProtons = cms.bool(True),
+					    DebugPF = cms.bool(True),
+					    DebugJets = cms.bool(True)
+					)
+```
