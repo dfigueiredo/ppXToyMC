@@ -165,108 +165,118 @@ void GenParticleShow::analyze(const edm::Event& iEvent, const edm::EventSetup &i
     }
     if(DebugPF_){
       if(genparticleEvt->status()==1 && fabs(genparticleEvt->pdgId()!=2212)){
+	//if(fabs(genparticleEvt->pdgId()!=2212)){
 	std::cout << " -- Particle: \t\tpt() " << genparticleEvt->pt() << " [GeV],  eta: "<< genparticleEvt->eta() << ", status: " << genparticleEvt->status() << ", pdgId: " << genparticleEvt->pdgId() << std::endl;
       }
+
+      if(genparticleEvt->pdgId()==23){
+	std::cout << "Boson Z: " << std::endl;
+	std::cout << "\tStatus: " << genparticleEvt->status() << std::endl;
+	std::cout << "\tpT [GeV]: " << genparticleEvt->pt() << std::endl;
+	std::cout << "\teta [ua]: " << genparticleEvt->eta() << std::endl;
+	std::cout << "\tphi [ua]: " << genparticleEvt->phi() << std::endl;
+      }
+
+      }
     }
+
+    for (const auto& genjetEvt: genjetlist){
+      (*genjet_status_).push_back(genjetEvt->status());
+      (*genjet_pdgid_).push_back(genjetEvt->pdgId());
+      (*genjet_energy_).push_back(genjetEvt->energy());
+      (*genjet_pt_).push_back(genjetEvt->pt());
+      (*genjet_eta_).push_back(genjetEvt->eta());
+      (*genjet_phi_).push_back(genjetEvt->phi());
+      (*genjet_px_).push_back(genjetEvt->px());
+      (*genjet_py_).push_back(genjetEvt->py());
+      (*genjet_pz_).push_back(genjetEvt->pz());
+      if(DebugJets_){
+	std::cout << " -- Jet: \t\tpt() " << genjetEvt->pt() << " [GeV], eta "<< genjetEvt->eta() << ", status "<< genjetEvt->status() << std::endl; 
+      }
+    }
+
+    tree_->Fill();
+
   }
 
-  for (const auto& genjetEvt: genjetlist){
-    (*genjet_status_).push_back(genjetEvt->status());
-    (*genjet_pdgid_).push_back(genjetEvt->pdgId());
-    (*genjet_energy_).push_back(genjetEvt->energy());
-    (*genjet_pt_).push_back(genjetEvt->pt());
-    (*genjet_eta_).push_back(genjetEvt->eta());
-    (*genjet_phi_).push_back(genjetEvt->phi());
-    (*genjet_px_).push_back(genjetEvt->px());
-    (*genjet_py_).push_back(genjetEvt->py());
-    (*genjet_pz_).push_back(genjetEvt->pz());
-    if(DebugJets_){
-      std::cout << " -- Jet: \t\tpt() " << genjetEvt->pt() << " [GeV], eta "<< genjetEvt->eta() << ", status "<< genjetEvt->status() << std::endl; 
-    }
+
+  //----------------------------------------------------------------------------------------------------
+  void GenParticleShow::beginJob(){
+
+    edm::Service<TFileService> fs;
+    tree_=fs->make<TTree>("analyzer","analyzer");
+
+    genparticle_status_ = new std::vector<int>;
+    genparticle_pdgid_ = new std::vector<int>;
+    genparticle_energy_ = new std::vector<double>;
+    genparticle_pt_ = new std::vector<double>;
+    genparticle_eta_ = new std::vector<double>;
+    genparticle_phi_ = new std::vector<double>;
+    genparticle_px_ = new std::vector<double>;
+    genparticle_py_ = new std::vector<double>;
+    genparticle_pz_ = new std::vector<double>;
+    genparticle_xi_ = new std::vector<double>;
+
+    genjet_status_ = new std::vector<int>;
+    genjet_pdgid_ = new std::vector<int>;
+    genjet_energy_ = new std::vector<double>;
+    genjet_pt_ = new std::vector<double>;
+    genjet_eta_ = new std::vector<double>;
+    genjet_phi_ = new std::vector<double>;
+    genjet_px_ = new std::vector<double>;
+    genjet_py_ = new std::vector<double>;
+    genjet_pz_ = new std::vector<double>;
+
+    tree_->Branch("genparticle_status",&genparticle_status_);
+    tree_->Branch("genparticle_pdgid",&genparticle_pdgid_);
+    tree_->Branch("genparticle_energy",&genparticle_energy_);
+    tree_->Branch("genparticle_pt",&genparticle_pt_);
+    tree_->Branch("genparticle_eta",&genparticle_eta_);
+    tree_->Branch("genparticle_phi",&genparticle_phi_);
+    tree_->Branch("genparticle_px",&genparticle_px_);
+    tree_->Branch("genparticle_py",&genparticle_py_);
+    tree_->Branch("genparticle_pz",&genparticle_pz_);
+    tree_->Branch("genparticle_xi",&genparticle_xi_);
+    tree_->Branch("genjet_status",&genjet_status_);
+    tree_->Branch("genjet_pdgid",&genjet_pdgid_);
+    tree_->Branch("genjet_energy",&genjet_energy_);
+    tree_->Branch("genjet_pt",&genjet_pt_);
+    tree_->Branch("genjet_eta",&genjet_eta_);
+    tree_->Branch("genjet_phi",&genjet_phi_);
+    tree_->Branch("genjet_px",&genjet_px_);
+    tree_->Branch("genjet_py",&genjet_py_);
+    tree_->Branch("genjet_pz",&genjet_pz_);
+
   }
 
-  tree_->Fill();
 
-}
+  //----------------------------------------------------------------------------------------------------
+  void GenParticleShow::endJob()
+  {
 
+    delete genparticle_status_;
+    delete genparticle_pdgid_;
+    delete genparticle_energy_;
+    delete genparticle_pt_;
+    delete genparticle_eta_;
+    delete genparticle_phi_;
+    delete genparticle_px_;
+    delete genparticle_py_;
+    delete genparticle_pz_;
+    delete genparticle_xi_;
 
-//----------------------------------------------------------------------------------------------------
-void GenParticleShow::beginJob(){
+    delete genjet_status_;
+    delete genjet_pdgid_;
+    delete genjet_energy_;
+    delete genjet_pt_;
+    delete genjet_eta_;
+    delete genjet_phi_;
+    delete genjet_px_;
+    delete genjet_py_;
+    delete genjet_pz_;
 
-  edm::Service<TFileService> fs;
-  tree_=fs->make<TTree>("analyzer","analyzer");
+  }
 
-  genparticle_status_ = new std::vector<int>;
-  genparticle_pdgid_ = new std::vector<int>;
-  genparticle_energy_ = new std::vector<double>;
-  genparticle_pt_ = new std::vector<double>;
-  genparticle_eta_ = new std::vector<double>;
-  genparticle_phi_ = new std::vector<double>;
-  genparticle_px_ = new std::vector<double>;
-  genparticle_py_ = new std::vector<double>;
-  genparticle_pz_ = new std::vector<double>;
-  genparticle_xi_ = new std::vector<double>;
+  //----------------------------------------------------------------------------------------------------
 
-  genjet_status_ = new std::vector<int>;
-  genjet_pdgid_ = new std::vector<int>;
-  genjet_energy_ = new std::vector<double>;
-  genjet_pt_ = new std::vector<double>;
-  genjet_eta_ = new std::vector<double>;
-  genjet_phi_ = new std::vector<double>;
-  genjet_px_ = new std::vector<double>;
-  genjet_py_ = new std::vector<double>;
-  genjet_pz_ = new std::vector<double>;
-
-  tree_->Branch("genparticle_status",&genparticle_status_);
-  tree_->Branch("genparticle_pdgid",&genparticle_pdgid_);
-  tree_->Branch("genparticle_energy",&genparticle_energy_);
-  tree_->Branch("genparticle_pt",&genparticle_pt_);
-  tree_->Branch("genparticle_eta",&genparticle_eta_);
-  tree_->Branch("genparticle_phi",&genparticle_phi_);
-  tree_->Branch("genparticle_px",&genparticle_px_);
-  tree_->Branch("genparticle_py",&genparticle_py_);
-  tree_->Branch("genparticle_pz",&genparticle_pz_);
-  tree_->Branch("genparticle_xi",&genparticle_xi_);
-  tree_->Branch("genjet_status",&genjet_status_);
-  tree_->Branch("genjet_pdgid",&genjet_pdgid_);
-  tree_->Branch("genjet_energy",&genjet_energy_);
-  tree_->Branch("genjet_pt",&genjet_pt_);
-  tree_->Branch("genjet_eta",&genjet_eta_);
-  tree_->Branch("genjet_phi",&genjet_phi_);
-  tree_->Branch("genjet_px",&genjet_px_);
-  tree_->Branch("genjet_py",&genjet_py_);
-  tree_->Branch("genjet_pz",&genjet_pz_);
-
-}
-
-
-//----------------------------------------------------------------------------------------------------
-void GenParticleShow::endJob()
-{
-
-  delete genparticle_status_;
-  delete genparticle_pdgid_;
-  delete genparticle_energy_;
-  delete genparticle_pt_;
-  delete genparticle_eta_;
-  delete genparticle_phi_;
-  delete genparticle_px_;
-  delete genparticle_py_;
-  delete genparticle_pz_;
-  delete genparticle_xi_;
-
-  delete genjet_status_;
-  delete genjet_pdgid_;
-  delete genjet_energy_;
-  delete genjet_pt_;
-  delete genjet_eta_;
-  delete genjet_phi_;
-  delete genjet_px_;
-  delete genjet_py_;
-  delete genjet_pz_;
-
-}
-
-//----------------------------------------------------------------------------------------------------
-
-DEFINE_FWK_MODULE(GenParticleShow);
+  DEFINE_FWK_MODULE(GenParticleShow);

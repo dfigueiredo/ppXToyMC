@@ -1,7 +1,21 @@
 import sys
 import FWCore.ParameterSet.Config as cms
 
+miniAOD = False
+
+#fileinput = 'file:///afs/cern.ch/user/d/dmf/private/work/private/CMSPhysicsAnalysis/PrivateMCProduction/PPSMCProduction/working/RunIISummer20UL17GEN.root'
 fileinput = 'file:///afs/cern.ch/user/d/dmf/private/work/private/CMSPhysicsAnalysis/PrivateMCProduction/PPSMCProduction/working/RunIISummer20UL17GEN.root'
+
+gentag = ''
+genjettag = ''
+
+if miniAOD:
+  gentag = 'prunedGenParticles'
+  genjettag = 'slimmedGenJets'
+else:
+  gentag = 'genParticles'
+  genjettag = 'ak4GenJets'
+
 
 process = cms.Process('Analysis')
 
@@ -38,12 +52,12 @@ process.load("TrackingTools.TransientTrack.TransientTrackBuilder_cfi")
 # Proton Filter     
 #---------------
 process.genParticle = cms.EDAnalyzer("GenParticleShow",
-					    GenPartTag = cms.InputTag('genParticles'),
-					    GenJetTag = cms.InputTag('ak4GenJets'),
+					    GenPartTag = cms.InputTag(gentag),
+					    GenJetTag = cms.InputTag(genjettag),
 					    EBeam = cms.double(6500.),
 					    DebugProtons = cms.bool(True),
 					    DebugPF = cms.bool(True),
-					    DebugJets = cms.bool(True)
+					    DebugJets = cms.bool(False)
 					)
 
 # prepare the output file
