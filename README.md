@@ -1,6 +1,6 @@
 # LHE Toy MC
 
-A toy MC kinematics model to emulate proton-proton (pp) collisions, (S) intermediate scalars and final hidden particles. This package includes emulations of pp to ppXZ or pp to ppSX where S decays to H(bbar). The configuration files placed in "test/" folder are able to generate LHE files, which are used within CMSSW framework to produce a fully detector simulated sample, including a fast simulation of the protons detected by PPS roman pots. 
+A toy MC kinematics model to emulate proton-proton (pp) collisions, (S) intermediate scalars and final hidden particles. This package includes emulations of pp to ppS(ZX) or pp to ppS(HX) where S decays to H(bbar) or Z(MuMu||EE). The configuration files placed in "test/" folder are able to generate LHE files, which are used within CMSSW framework to produce a fully detector simulated sample, including a fast simulation of the protons detected by PPS roman pots. 
 
 The package to generate a full CMS sample is placed [here](https://github.com/dfigueiredo/PPSMCProduction).
 
@@ -20,7 +20,7 @@ scram b -j 8
 
 ```bash
 cd test/
-cmsRun HXToyMC_LHE.py 
+cmsRun XHToyMC_LHE.py (or XZToyMC_LHE.py) 
 ```
 
 ## Validation
@@ -36,8 +36,8 @@ There are options flags that can be used:
 
 ```python
 process.genParticle = cms.EDAnalyzer("GenParticleShow",
-					    GenPartTag = cms.InputTag('genParticles'),
-					    GenJetTag = cms.InputTag('ak4GenJets'),
+					    GenPartTag = cms.InputTag('genParticles'||'prunedGenParticles'),
+					    GenJetTag = cms.InputTag('ak4GenJets'||'slimmedGenJets'),
 					    EBeam = cms.double(6500.),
 					    DebugProtons = cms.bool(True),
 					    DebugPF = cms.bool(True),
