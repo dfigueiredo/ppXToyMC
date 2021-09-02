@@ -56,24 +56,25 @@ class PPSToyMcLHE_XZ : public edm::one::EDProducer<edm::BeginRunProducer, edm::E
     // input parameters
     unsigned int verbosity;
     bool decayX;
-    bool decayZToEE;
-    bool decayZToMuMu;
-    const double m_S_mean;  // mass of the S scalar particle, GeV
-    const double m_S_gamma; // width of the S particle, GeV
-    const double m_S_min; // minimum mass of the S resonance, gamma, GeV
+    bool decayZToElectrons;
+    bool decayZToMuons;
+    bool useResonantIntermediateState;
+    const double m_X;       // mass of the X particle, GeV
     const double m_Z_mean;  // mass of the Z particle, mean, GeV
-    const double m_Z_gamma; // width of the Z particle, gamma, GeV
-    const double m_X_mean;   // mass of the X particle, GeV
-    const double m_X_gamma;  // width of the X particle, GeV
-    const double m_f1;       //mass of the fermions, GeV
-    const double m_f2;       //mass of the fermions, GeV
-    const double m_e;       // mass of the muon, GeV
-    const double m_mu;       // mass of the muon, GeV
+    const double m_Z_gamma; // mass of the Z particle, gamma, GeV
+    const double m_X_pr1;   // mass of the X particle product 1, GeV
+    const double m_X_pr2;   // mass of the X particle product 2, GeV
+    const double m_e;       // mass of the X electron, GeV
+    const double m_mu;      // mass of the X electron, GeV
     const double p_beam;    // beam momentum, GeV
-    const double c_S; // parameter of the exponential distribution for the invariant mass of the X-Z system, GeV
+    const double m_XZ_min;  // minimal value of invariant mass of the X-Z system, GeV
+    const double c_XZ;      // parameter of the exponential distribution for the invariant mass of the X-Z system, GeV
+    const double m_S_mean;  // mass of the intermediate particle S, mean, GeV
+    const double m_S_gamma; // mass of the intermediate particle S, gamma, GeV
     const double p_z_LAB_2p_min; // minimum of p_z of the 2-proton system in the LAB frame, GeV
     const double p_z_LAB_2p_max; // maximum of p_z of the 2-proton system in the LAB frame, GeV
     const double p_T_Z_min; // minimum value of Z's pT in the LAB frame, GeV
+
     std::string lheOutputFile; // LHE filename. If empty, this tool will not produce the LHE XML file.
     std::ofstream file;
     bool writeLHE;
@@ -90,21 +91,21 @@ using namespace std;
 PPSToyMcLHE_XZ::PPSToyMcLHE_XZ(const edm::ParameterSet& pset) :
   verbosity(pset.getUntrackedParameter<unsigned int>("verbosity", 0)),
   decayX(pset.getParameter<bool>("decayX")),
-  decayZToEE(pset.getParameter<bool>("decayZToEE")),
-  decayZToMuMu(pset.getParameter<bool>("decayZToMuMu")),
-  m_S_mean(pset.getParameter<double>("m_S_mean")),
-  m_S_gamma(pset.getParameter<double>("m_S_gamma")),
-  m_S_min(pset.getParameter<double>("m_S_min")),
+  decayZToElectrons(pset.getParameter<bool>("decayZToElectrons")),
+  decayZToMuons(pset.getParameter<bool>("decayZToMuons")),
+  useResonantIntermediateState(pset.getParameter<bool>("useResonantIntermediateState")),
+  m_X(pset.getParameter<double>("m_X")),
   m_Z_mean(pset.getParameter<double>("m_Z_mean")),
   m_Z_gamma(pset.getParameter<double>("m_Z_gamma")),
-  m_X_mean(pset.getParameter<double>("m_X_mean")),
-  m_X_gamma(pset.getParameter<double>("m_X_gamma")),
-  m_f1(pset.getParameter<double>("m_f1")),
-  m_f2(pset.getParameter<double>("m_f2")),
+  m_X_pr1(pset.getParameter<double>("m_X_pr1")),
+  m_X_pr2(pset.getParameter<double>("m_X_pr2")),
   m_e(pset.getParameter<double>("m_e")),
   m_mu(pset.getParameter<double>("m_mu")),
   p_beam(pset.getParameter<double>("p_beam")),
-  c_S(pset.getParameter<double>("c_S")),
+  m_XZ_min(pset.getParameter<double>("m_XZ_min")),
+  c_XZ(pset.getParameter<double>("c_XZ")),
+  m_S_mean(pset.getParameter<double>("m_S_mean")),
+  m_S_gamma(pset.getParameter<double>("m_S_gamma")),
   p_z_LAB_2p_min(pset.getParameter<double>("p_z_LAB_2p_min")),
   p_z_LAB_2p_max(pset.getParameter<double>("p_z_LAB_2p_max")),
   p_T_Z_min(pset.getParameter<double>("p_T_Z_min")),
@@ -188,7 +189,6 @@ void PPSToyMcLHE_XZ::fillEventLHE(lhef::HEPEUP &outlhe,
   outlhe.SCALUP = 1; 
   outlhe.AQEDUP = 7.29929980e-03;
   outlhe.AQCDUP = 9.87552740e-02;
-
   outlhe.PUP[index][0] = particle.px();
   outlhe.PUP[index][1] = particle.py();
   outlhe.PUP[index][2] = particle.pz();
@@ -201,33 +201,20 @@ void PPSToyMcLHE_XZ::fillEventLHE(lhef::HEPEUP &outlhe,
     outlhe.PUP[index][4] = particle.m();
   }
   outlhe.IDUP[index] = pdgid;
+  outlhe.ICOLUP[index].first = 0;
+  outlhe.ICOLUP[index].second = 0;
 
-  if (pdgid == 51) { // DM SPIN 0 Particle
-    outlhe.ICOLUP[index].first = 0;
-    outlhe.ICOLUP[index].second = 0;
+  if(fabs(pdgid)==particleId_Z || fabs(pdgid)==particleId_X){
     outlhe.MOTHUP[index].first = 1;
     outlhe.MOTHUP[index].second = 2;
   }
-  else if (std::abs(pdgid) == 23 || std::abs(pdgid) == 1000022) {
-    outlhe.ICOLUP[index].first = 0;
-    outlhe.ICOLUP[index].second = 0;
+  if(pdgid==particleId_X_pr1 || pdgid==particleId_X_pr2){
     outlhe.MOTHUP[index].first = 5;
     outlhe.MOTHUP[index].second = 5;
-  }else if(std::abs(pdgid) == 11 || std::abs(pdgid) == 13){
-    outlhe.ICOLUP[index].first = 0;
-    outlhe.ICOLUP[index].second = 0;
-    outlhe.MOTHUP[index].first = 9;
-    outlhe.MOTHUP[index].second = 9;
-  }else if(std::abs(pdgid) == 14){
-    outlhe.ICOLUP[index].first = 0;
-    outlhe.ICOLUP[index].second = 0;
-    outlhe.MOTHUP[index].first = 6;
-    outlhe.MOTHUP[index].second = 6;
-  }else{
-    outlhe.ICOLUP[index].first = 0;
-    outlhe.ICOLUP[index].second = 0;
-    outlhe.MOTHUP[index].first = 0;
-    outlhe.MOTHUP[index].second = 0;
+  }
+  if(pdgid==particleId_mu_mi || pdgid==particleId_mu_pl || pdgid==particleId_e_mi || pdgid==particleId_e_pl){
+    outlhe.MOTHUP[index].first = 8;
+    outlhe.MOTHUP[index].second = 8;
   }
   outlhe.ISTUP[index] = status;
   return;
@@ -238,48 +225,58 @@ void PPSToyMcLHE_XZ::produce(edm::Event &e, const edm::EventSetup& es)
 
   lhef::HEPEUP hepeup;
 
-  CLHEP::HepLorentzVector zero(0, 0, 0, 0);
-
   if (verbosity)
-    printf("\n>> PPSToyMcLHE_XZ_XZ::produce > event %llu\n", e.id().event());
+    printf("\n>> PPXZGenerator::produce > event %llu\n", e.id().event());
 
+  // get conditions
   edm::Service<edm::RandomNumberGenerator> rng;
   CLHEP::HepRandomEngine* engine = &rng->getEngine(e.streamID());
 
+  //ESHandle<HepPDT::ParticleDataTable> pdgTable;
+  //es.getData(pdgTable);
+
+  // prepare HepMC event
   HepMC::GenEvent *fEvt = new HepMC::GenEvent();
   fEvt->set_event_number(e.id().event());
 
+  // generate vertex position
   HepMC::GenVertex *vtx = new HepMC::GenVertex(HepMC::FourVector(0., 0., 0., 0.));
   fEvt->add_vertex(vtx);
 
+  //const HepPDT::ParticleData *pData = pdgTable->particle(HepPDT::ParticleID(particleId));
+  //double mass_1 = pData->mass().value();
+  //double mass_2 = pData->mass().value();
+
   // generate mass of Z and mass of the X-Z system
-  const double c_S_mean = 1. / c_S;
-  double m_Z = -1., m_S = -1., m_X = -1.;
+  const double c_XZ_mean = 1. / c_XZ;
+  double m_Z = -1., m_XZ = -1.;
   double px_1 = -1., py_1 = -1.;
   double px_2 = -1., py_2 = -1.;
 
   // four-momenta of the outgoing particles in the LAB frame
-  CLHEP::HepLorentzVector momentum_S;
   CLHEP::HepLorentzVector momentum_Z;
   CLHEP::HepLorentzVector momentum_X;
+
   CLHEP::HepLorentzVector momentum_p1, momentum_p1i;
   CLHEP::HepLorentzVector momentum_p2, momentum_p2i;
 
-  // Try to generate event fullfilling all criteria
+  // try to generate event fullfilling all criteria
   bool generationOK = false;
+
   for (unsigned int n_attempt = 0; n_attempt < 10000; ++n_attempt)
   {
 
     m_Z = CLHEP::RandBreitWigner::shoot(engine, m_Z_mean, m_Z_gamma);
-    m_S = m_S_min + CLHEP::RandExponential::shoot(engine, c_S_mean);
-    m_X = CLHEP::RandBreitWigner::shoot(engine, m_X_mean, m_X_gamma);
+    m_XZ = (useResonantIntermediateState) ? CLHEP::RandBreitWigner::shoot(engine, m_S_mean, m_S_gamma) :
+      m_XZ_min + CLHEP::RandExponential::shoot(engine, c_XZ_mean);
 
     px_1 = CLHEP::RandGauss::shoot(engine, 0., 0.1);
     py_1 = CLHEP::RandGauss::shoot(engine, 0., 0.1);
     px_2 = CLHEP::RandGauss::shoot(engine, 0., 0.1);
     py_2 = CLHEP::RandGauss::shoot(engine, 0., 0.1);
 
-    if (m_Z < 0. || m_S < m_Z + m_X) continue;
+    if (m_Z < 0. || m_XZ < m_Z + m_X)
+      continue;
 
     // generate p_z of the 2-proton system in the LAB frame
     const double p_z_LAB_2p = CLHEP::RandFlat::shoot(engine, p_z_LAB_2p_min, p_z_LAB_2p_max);
@@ -291,32 +288,24 @@ void PPSToyMcLHE_XZ::produce(edm::Event &e, const edm::EventSetup& es)
 
     // determine xi's of the protons
     // proton 1: positive z momentum component
-    const double xi2 = (p_z_LAB_2p + sqrt(p_z_LAB_2p*p_z_LAB_2p + m_S*m_S)) / (2. * p_beam);
-    const double xi1 = m_S * m_S / (4. * p_beam * p_beam * xi2);
+    const double xi2 = (p_z_LAB_2p + sqrt(p_z_LAB_2p*p_z_LAB_2p + m_XZ*m_XZ)) / (2. * p_beam);
+    const double xi1 = m_XZ * m_XZ / (4. * p_beam * p_beam * xi2);
 
     if (verbosity)
     {
       printf("  m_Z = %.1f\n", m_Z);
-      printf("  m_X = %.1f\n", m_X);
-      printf("  m_S = %.1f\n", m_S);
+      printf("  m_XZ = %.1f\n", m_XZ);
       printf("  p_z_LAB_2p = %.1f\n", p_z_LAB_2p);
       printf("  xi1 = %.3f, xi2 = %.3f\n", xi1, xi2);
       printf("  p_beam * (xi2 - xi1) = %.1f\n", p_beam * (xi2 - xi1));
     }
 
     // determine momenta of the X and Z particles in the CMS frame of the X-Z system
-    const double p_c_sq = pow(m_S*m_S - m_X*m_X - m_Z*m_Z, 2.) / (4. * m_S * m_S) - m_X*m_X * m_Z*m_Z / (m_S*m_S);
+    const double p_c_sq = pow(m_XZ*m_XZ - m_X*m_X - m_Z*m_Z, 2.) / (4. * m_XZ * m_XZ) - m_X*m_X * m_Z*m_Z / (m_XZ*m_XZ);
     const double p_c = sqrt(p_c_sq);
 
     if (verbosity)
       printf("  p_c = %.3f\n", p_c);
-
-    CLHEP::HepLorentzVector momentum_S_CMS(
-	+ p_c * sin_theta_c * cos(phi_c),
-	+ p_c * sin_theta_c * sin(phi_c),
-	+ p_c * cos_theta_c,
-	sqrt(p_c*p_c + m_S*m_S)
-	);
 
     CLHEP::HepLorentzVector momentum_X_CMS(
 	+ p_c * sin_theta_c * cos(phi_c),
@@ -332,6 +321,7 @@ void PPSToyMcLHE_XZ::produce(edm::Event &e, const edm::EventSetup& es)
 	sqrt(p_c*p_c + m_Z*m_Z)
 	);
 
+    // determine boost from X-Z CMS frame to the LAB frame
     const double beta = (xi1 - xi2) / (xi1 + xi2);
     const CLHEP::Hep3Vector betaVector(0., 0., beta);
 
@@ -339,7 +329,6 @@ void PPSToyMcLHE_XZ::produce(edm::Event &e, const edm::EventSetup& es)
       printf("  beta = %.3f\n", beta);
 
     // determine four-momenta of the outgoing particles in the LAB frame
-    momentum_S = CLHEP::boostOf(momentum_S_CMS, betaVector);
     momentum_Z = CLHEP::boostOf(momentum_Z_CMS, betaVector);
     momentum_X = CLHEP::boostOf(momentum_X_CMS, betaVector);
 
@@ -371,15 +360,18 @@ void PPSToyMcLHE_XZ::produce(edm::Event &e, const edm::EventSetup& es)
     return;
   }
 
+  // until here checked
+
   // fill in the HepMC record
   unsigned int barcode = 0;
 
   // status codes
+  //const int statusInitial = 3;
   const int statusFinal = 1;
   const int statusDecayed = 2;
 
   int status_X = (decayX) ? statusDecayed : statusFinal;
-  int status_Z = (decayZToEE || decayZToMuMu) ? statusDecayed : statusFinal;
+  int status_Z = (decayZToElectrons || decayZToMuons) ? statusDecayed : statusFinal;
 
   HepMC::GenParticle* particle_Z = new HepMC::GenParticle(momentum_Z, particleId_Z, status_Z);
   particle_Z->suggest_barcode(++barcode);
@@ -403,83 +395,78 @@ void PPSToyMcLHE_XZ::produce(edm::Event &e, const edm::EventSetup& es)
   fillEventLHE(hepeup, momentum_p1, particleId_p, 1, 1);
   fillEventLHE(hepeup, momentum_p2, particleId_p, 1, 1);
 
-  // S->XZ decays
-  fillEventLHE(hepeup, momentum_S, 51, 2, 0); // DM (S) -> Z + X
-  fillEventLHE(hepeup, momentum_X, particleId_X, 2, 0);
-
   if (decayX)
   {
+
     // generate decay angles in X's rest frame;
     const double cos_theta_d = 2. * CLHEP::RandFlat::shoot(engine) - 1.;
     const double sin_theta_d = sqrt(1. - cos_theta_d * cos_theta_d);
     const double phi_d = CLHEP::RandFlat::shoot(engine) * 2. * M_PI;
 
-    // 4-momentum and energy in X's rest frame
-    const double M2 = m_X*m_X - m_f1*m_f1 - m_f2*m_f2;
-    const double p_f = sqrt(M2*M2 - 4. * m_f1*m_f1 * m_f2*m_f2) / 2. / m_X;
-    const double E_f1 = sqrt(p_f*p_f + m_f1*m_f1);
-    const double E_f2 = sqrt(p_f*p_f + m_f2*m_f2);
+    // product momentum and energy in X's rest frame
+    const double M2 = m_X*m_X - m_X_pr1*m_X_pr1 - m_X_pr2*m_X_pr2;
+    const double p_pr = sqrt(M2*M2 - 4. * m_X_pr1*m_X_pr1 * m_X_pr2*m_X_pr2) / 2. / m_X;
+    const double E_pr1 = sqrt(p_pr*p_pr + m_X_pr1*m_X_pr1);
+    const double E_pr2 = sqrt(p_pr*p_pr + m_X_pr2*m_X_pr2);
 
-    // 4-momenta in X's rest frame
-    CLHEP::HepLorentzVector momentum_f1(
-	p_f * sin_theta_d * cos(phi_d),
-	p_f * sin_theta_d * sin(phi_d),
-	p_f * cos_theta_d,
-	E_f1
+    // product four-momenta in X's rest frame
+    CLHEP::HepLorentzVector momentum_pr1(
+	p_pr * sin_theta_d * cos(phi_d),
+	p_pr * sin_theta_d * sin(phi_d),
+	p_pr * cos_theta_d,
+	E_pr1
 	);
 
-    CLHEP::HepLorentzVector momentum_f2(
-	-p_f * sin_theta_d * cos(phi_d),
-	-p_f * sin_theta_d * sin(phi_d),
-	-p_f * cos_theta_d,
-	E_f2
+    CLHEP::HepLorentzVector momentum_pr2(
+	-p_pr * sin_theta_d * cos(phi_d),
+	-p_pr * sin_theta_d * sin(phi_d),
+	-p_pr * cos_theta_d,
+	E_pr2
 	);
 
     // apply boost
     double beta = momentum_X.rho() / momentum_X.t();
     CLHEP::Hep3Vector betaVector(momentum_X.x(), momentum_X.y(), momentum_X.z());
     betaVector *= beta / betaVector.mag();
-    momentum_f1 = CLHEP::boostOf(momentum_f1, betaVector);
-    momentum_f2 = CLHEP::boostOf(momentum_f2, betaVector);
+    momentum_pr1 = CLHEP::boostOf(momentum_pr1, betaVector);
+    momentum_pr2 = CLHEP::boostOf(momentum_pr2, betaVector);
 
     if (verbosity)
     {
-      const CLHEP::HepLorentzVector m_tot = momentum_p1 + momentum_p2 + momentum_Z + momentum_f1 + momentum_f2;
-      printf("  four-momentum of p + p + Z + X_f1 + X_f2: (%.5f, %.5f, %.5f | %.5f)\n", m_tot.x(), m_tot.y(), m_tot.z(), m_tot.t());
+      const CLHEP::HepLorentzVector m_tot = momentum_p1 + momentum_p2 + momentum_Z + momentum_pr1 + momentum_pr2;
+      printf("  four-momentum of p + p + Z + X_pr1 + X_pr2: (%.1f, %.1f, %.1f | %.1f)\n", m_tot.x(), m_tot.y(), m_tot.z(), m_tot.t());
     }
 
     // add particles to vertex
-    HepMC::GenParticle* particle_f1 = new HepMC::GenParticle(momentum_f1, particleId_f1, statusFinal);
-    particle_f1->suggest_barcode(++barcode);
-    vtx->add_particle_out(particle_f1);
+    HepMC::GenParticle* particle_pr1 = new HepMC::GenParticle(momentum_pr1, particleId_X_pr1, statusFinal);
+    particle_pr1->suggest_barcode(++barcode);
+    vtx->add_particle_out(particle_pr1);
 
-    HepMC::GenParticle* particle_f2 = new HepMC::GenParticle(momentum_f2, particleId_f2, statusFinal);
-    particle_f2->suggest_barcode(++barcode);
-    vtx->add_particle_out(particle_f2);
+    HepMC::GenParticle* particle_pr2 = new HepMC::GenParticle(momentum_pr2, particleId_X_pr2, statusFinal);
+    particle_pr2->suggest_barcode(++barcode);
+    vtx->add_particle_out(particle_pr2);
 
-    if(isnan(M2)||isnan(p_f) || isnan(E_f1) ||isnan(E_f2)||isnan(cos_theta_d)||isnan(sin_theta_d)||isnan(phi_d)||isnan(beta)){
+    if(isnan(M2)||isnan(p_pr) || isnan(E_pr1) ||isnan(E_pr2)||isnan(cos_theta_d)||isnan(sin_theta_d)||isnan(phi_d)||isnan(beta)){
       edm::LogWarning("PPSToyMcLHE_XZ") << "--NAN--. Skipping the event!";
       return;
     }else{
-      fillEventLHE(hepeup, momentum_f1, particleId_f1, 1, 0);
-      fillEventLHE(hepeup, momentum_f2, particleId_f2, 1, 0);
+      fillEventLHE(hepeup, momentum_X, particleId_X, 2, 0);
+      fillEventLHE(hepeup, momentum_pr1, particleId_X_pr1, 1, 0); //statusFinal
+      fillEventLHE(hepeup, momentum_pr2, particleId_X_pr2, 1, 0); //statusFinal
     }
 
   }
 
-  // Z decay
-  fillEventLHE(hepeup, momentum_Z, 23, 2, 0);
-
-  if (decayZToEE || decayZToMuMu)
+  if (decayZToElectrons || decayZToMuons)
   {
 
     double m_l = 0.;
     signed int particleId_l_mi=0, particleId_l_pl=0;
 
-    if (decayZToEE) m_l = m_e, particleId_l_mi = particleId_e_mi, particleId_l_pl = particleId_e_pl;
-    if (decayZToMuMu) m_l = m_mu, particleId_l_mi = particleId_mu_mi, particleId_l_pl = particleId_mu_pl;
+    if (decayZToElectrons) m_l = m_e, particleId_l_mi = particleId_e_mi, particleId_l_pl = particleId_e_pl;
+    if (decayZToMuons) m_l = m_mu, particleId_l_mi = particleId_mu_mi, particleId_l_pl = particleId_mu_pl;
 
-    // generate decay angles in H's rest frame;
+    // generate decay angles in Z's rest frame;
     const double cos_theta_d = 2. * CLHEP::RandFlat::shoot(engine) - 1.;
     const double sin_theta_d = sqrt(1. - cos_theta_d * cos_theta_d);
     const double phi_d = CLHEP::RandFlat::shoot(engine) * 2. * M_PI;
@@ -503,7 +490,6 @@ void PPSToyMcLHE_XZ::produce(edm::Event &e, const edm::EventSetup& es)
 	E_l
 	);
 
-
     // apply boost
     double beta = momentum_Z.rho() / momentum_Z.t();
     CLHEP::Hep3Vector betaVector(momentum_Z.x(), momentum_Z.y(), momentum_Z.z());
@@ -512,7 +498,7 @@ void PPSToyMcLHE_XZ::produce(edm::Event &e, const edm::EventSetup& es)
     momentum_l_pl = CLHEP::boostOf(momentum_l_pl, betaVector);
 
     if (verbosity)
-    { 
+    {
       const CLHEP::HepLorentzVector m_tot = momentum_p1 + momentum_p2 + momentum_X + momentum_l_mi + momentum_l_pl;
       printf("  four-momentum of p + p + X + l + l: (%.1f, %.1f, %.1f | %.1f)\n", m_tot.x(), m_tot.y(), m_tot.z(), m_tot.t());
     }
@@ -530,6 +516,7 @@ void PPSToyMcLHE_XZ::produce(edm::Event &e, const edm::EventSetup& es)
       edm::LogWarning("PPSToyMcLHE_XZ") << "--NAN--. Skipping the event!";
       return;
     }else{
+      fillEventLHE(hepeup, momentum_Z, 23, 2, 0);
       fillEventLHE(hepeup, momentum_l_mi, particleId_l_mi, 1, 0);
       fillEventLHE(hepeup, momentum_l_pl, particleId_l_pl, 1, 0);
     }

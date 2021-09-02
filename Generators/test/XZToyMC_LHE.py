@@ -6,7 +6,7 @@ import FWCore.ParameterSet.Config as cms
 
 # Setting Input Parameters from Line Command
 options = VarParsing ('analysis')
-options.register('Mass',850,VarParsing.multiplicity.singleton, VarParsing.varType.int,"X Mass")
+options.register('Mass',950,VarParsing.multiplicity.singleton, VarParsing.varType.int,"X Mass")
 options.parseArguments()
 
 process = cms.Process("CTPPSDirectSimulation")
@@ -33,14 +33,14 @@ process.RandomNumberGeneratorService = cms.Service("RandomNumberGeneratorService
 
 # redefine particle generator
 process.load("ppXToyMC.Generators.PPSToyMcLHE_XZ_cfi")
-process.generator.verbosity = False
-process.generator.m_X_mean = options.Mass
-process.generator.m_S_mean = options.Mass + 200
-process.generator.m_f1 = (options.Mass - 200)/2
-process.generator.m_f2 = (options.Mass - 200)/2
+process.generator.verbosity = 0
+process.generator.m_X = options.Mass
+process.generator.m_XZ_min = options.Mass + 100
+process.generator.m_X_pr1 = options.Mass - 100
 process.generator.decayX = True
-process.generator.decayZToMuMu = True
-process.generator.decayZToEE = False
+process.generator.m_S_mean = options.Mass + 100
+process.generator.m_S_gamma = 0.01 * (options.Mass + 100)
+process.generator.useResonantIntermediateState = False
 
 # This is optional.  If you want the service to save the state
 # of all engines to each Event and LuminosityBlock, then
