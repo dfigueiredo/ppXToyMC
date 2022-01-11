@@ -197,35 +197,35 @@ void RecoParticleShow::analyze(const edm::Event& iEvent, const edm::EventSetup &
   // Sorting Jets by pt
   std::sort(recojetlist.begin(), recojetlist.end(), orderPt());
 
-  /*
-     for (const auto& recoparticleEvt: recoparticlelist){
-     (*recoparticle_pdgid_).push_back(recoparticleEvt->pdgId());
-     (*recoparticle_energy_).push_back(recoparticleEvt->energy());
-     (*recoparticle_pt_).push_back(recoparticleEvt->pt());
-     (*recoparticle_eta_).push_back(recoparticleEvt->eta());
-     (*recoparticle_phi_).push_back(recoparticleEvt->phi());
-     (*recoparticle_px_).push_back(recoparticleEvt->px());
-     (*recoparticle_py_).push_back(recoparticleEvt->py());
-     (*recoparticle_pz_).push_back(recoparticleEvt->pz());
-     (*recoparticle_xi_).push_back(1 - abs(recoparticleEvt->pz()) / EBeam_);
-     if(DebugPF_){
-     std::cout << " -- Particle: \t\tpt() " << recoparticleEvt->pt() << " [GeV],  eta: "<< recoparticleEvt->eta() << ", pdgId: " << recoparticleEvt->pdgId() << std::endl;
-     }
-     }
+  if(!MatchingMC_){
+    for (const auto& recoparticleEvt: recoparticlelist){
+      (*recoparticle_pdgid_).push_back(recoparticleEvt->pdgId());
+      (*recoparticle_energy_).push_back(recoparticleEvt->energy());
+      (*recoparticle_pt_).push_back(recoparticleEvt->pt());
+      (*recoparticle_eta_).push_back(recoparticleEvt->eta());
+      (*recoparticle_phi_).push_back(recoparticleEvt->phi());
+      (*recoparticle_px_).push_back(recoparticleEvt->px());
+      (*recoparticle_py_).push_back(recoparticleEvt->py());
+      (*recoparticle_pz_).push_back(recoparticleEvt->pz());
+      (*recoparticle_xi_).push_back(1 - abs(recoparticleEvt->pz()) / EBeam_);
+      if(DebugPF_){
+	std::cout << " -- Particle: \t\tpt() " << recoparticleEvt->pt() << " [GeV],  eta: "<< recoparticleEvt->eta() << ", pdgId: " << recoparticleEvt->pdgId() << std::endl;
+      }
+    }
 
-     for (const auto& recojetEvt: recojetlist){
-     (*recojet_energy_).push_back(recojetEvt->energy());
-     (*recojet_pt_).push_back(recojetEvt->pt());
-     (*recojet_eta_).push_back(recojetEvt->eta());
-     (*recojet_phi_).push_back(recojetEvt->phi());
-     (*recojet_px_).push_back(recojetEvt->px());
-     (*recojet_py_).push_back(recojetEvt->py());
-     (*recojet_pz_).push_back(recojetEvt->pz());
-     if(DebugJets_){
-     std::cout << " -- Jet: \t\tpt() " << recojetEvt->pt() << " [GeV], eta "<< recojetEvt->eta() << std::endl; 
-     }
-     }
-     */
+    for (const auto& recojetEvt: recojetlist){
+      (*recojet_energy_).push_back(recojetEvt->energy());
+      (*recojet_pt_).push_back(recojetEvt->pt());
+      (*recojet_eta_).push_back(recojetEvt->eta());
+      (*recojet_phi_).push_back(recojetEvt->phi());
+      (*recojet_px_).push_back(recojetEvt->px());
+      (*recojet_py_).push_back(recojetEvt->py());
+      (*recojet_pz_).push_back(recojetEvt->pz());
+      if(DebugJets_){
+	std::cout << " -- Jet: \t\tpt() " << recojetEvt->pt() << " [GeV], eta "<< recojetEvt->eta() << std::endl; 
+      }
+    }
+  }
 
   try{
 
@@ -251,114 +251,115 @@ void RecoParticleShow::analyze(const edm::Event& iEvent, const edm::EventSetup &
     // Sorting Jets by pt
     std::sort(genjetlist.begin(), genjetlist.end(), orderPt());
 
-    /*
-       for (const auto& genparticleEvt: genparticlelist){
-       (*genparticle_status_).push_back(genparticleEvt->status());
-       (*genparticle_pdgid_).push_back(genparticleEvt->pdgId());
-       (*genparticle_energy_).push_back(genparticleEvt->energy());
-       (*genparticle_pt_).push_back(genparticleEvt->pt());
-       (*genparticle_eta_).push_back(genparticleEvt->eta());
-       (*genparticle_phi_).push_back(genparticleEvt->phi());
-       (*genparticle_px_).push_back(genparticleEvt->px());
-       (*genparticle_py_).push_back(genparticleEvt->py());
-       (*genparticle_pz_).push_back(genparticleEvt->pz());
-       (*genparticle_xi_).push_back(1 - abs(genparticleEvt->pz()) / EBeam_);
+    if(!MatchingMC_){
 
-       if(DebugProtons_){
-       if(genparticleEvt->pdgId()==2212 && genparticleEvt->status()==1 && fabs(genparticleEvt->pz())>EBeam_*0.5){
-       std::cout << " -- Proton: \t\tpt() " << genparticleEvt->pt() << " [GeV], pz " << genparticleEvt->pz() << " [GeV], eta: "<< genparticleEvt->eta() << ", status: " << genparticleEvt->status() << std::endl;
-       }
-       }
+      for (const auto& genparticleEvt: genparticlelist){
+	(*genparticle_status_).push_back(genparticleEvt->status());
+	(*genparticle_pdgid_).push_back(genparticleEvt->pdgId());
+	(*genparticle_energy_).push_back(genparticleEvt->energy());
+	(*genparticle_pt_).push_back(genparticleEvt->pt());
+	(*genparticle_eta_).push_back(genparticleEvt->eta());
+	(*genparticle_phi_).push_back(genparticleEvt->phi());
+	(*genparticle_px_).push_back(genparticleEvt->px());
+	(*genparticle_py_).push_back(genparticleEvt->py());
+	(*genparticle_pz_).push_back(genparticleEvt->pz());
+	(*genparticle_xi_).push_back(1 - abs(genparticleEvt->pz()) / EBeam_);
 
-       if(DebugPF_){
-       if(genparticleEvt->status()==1 && fabs(genparticleEvt->pdgId()!=2212)){
-       std::cout << " -- Particle: \t\tpt() " << genparticleEvt->pt() << " [GeV],  eta: "<< genparticleEvt->eta() << ", status: " << genparticleEvt->status() << ", pdgId: " << genparticleEvt->pdgId() << std::endl;
-       }
+	if(DebugProtons_){
+	  if(genparticleEvt->pdgId()==2212 && genparticleEvt->status()==1 && fabs(genparticleEvt->pz())>EBeam_*0.5){
+	    std::cout << " -- Proton: \t\tpt() " << genparticleEvt->pt() << " [GeV], pz " << genparticleEvt->pz() << " [GeV], eta: "<< genparticleEvt->eta() << ", status: " << genparticleEvt->status() << std::endl;
+	  }
+	}
 
-       if(genparticleEvt->pdgId()==23){
-       std::cout << "Boson Z: " << std::endl;
-       std::cout << "\tStatus: " << genparticleEvt->status() << std::endl;
-       std::cout << "\tpT [GeV]: " << genparticleEvt->pt() << std::endl;
-       std::cout << "\teta [ua]: " << genparticleEvt->eta() << std::endl;
-       std::cout << "\tphi [ua]: " << genparticleEvt->phi() << std::endl;
-       }
+	if(DebugPF_){
+	  if(genparticleEvt->status()==1 && fabs(genparticleEvt->pdgId()!=2212)){
+	    std::cout << " -- Particle: \t\tpt() " << genparticleEvt->pt() << " [GeV],  eta: "<< genparticleEvt->eta() << ", status: " << genparticleEvt->status() << ", pdgId: " << genparticleEvt->pdgId() << std::endl;
+	  }
 
-       }
-       }
-
-       for (const auto& genjetEvt: genjetlist){
-       (*genjet_status_).push_back(genjetEvt->status());
-       (*genjet_pdgid_).push_back(genjetEvt->pdgId());
-       (*genjet_energy_).push_back(genjetEvt->energy());
-       (*genjet_pt_).push_back(genjetEvt->pt());
-       (*genjet_eta_).push_back(genjetEvt->eta());
-       (*genjet_phi_).push_back(genjetEvt->phi());
-       (*genjet_px_).push_back(genjetEvt->px());
-       (*genjet_py_).push_back(genjetEvt->py());
-       (*genjet_pz_).push_back(genjetEvt->pz());
-       if(DebugJets_){
-       std::cout << " -- Jet: \t\tpt() " << genjetEvt->pt() << " [GeV], eta "<< genjetEvt->eta() << ", status "<< genjetEvt->status() << std::endl; 
-       }
-       }
-       */
-
-    for(const auto& genparticleEvt: genparticlelist){
-      dR = 0;
-      for(const auto& recoparticleEvt: recoparticlelist){
-	//deltaR = ROOT::Math::VectorUtil::DeltaR(genparticleEvt->p4(), recoparticleEvt->p4());
-	dR = deltaR(genparticleEvt->eta(), genparticleEvt->phi(), recoparticleEvt->eta(), recoparticleEvt->phi());
-	if(dR < 0.1 ){
-	  std::cout << "DeltaR jet: " << dR << std::endl;
-	  (*genparticle_status_).push_back(genparticleEvt->status());
-	  (*genparticle_pdgid_).push_back(genparticleEvt->pdgId());
-	  (*genparticle_energy_).push_back(genparticleEvt->energy());
-	  (*genparticle_pt_).push_back(genparticleEvt->pt());
-	  (*genparticle_eta_).push_back(genparticleEvt->eta());
-	  (*genparticle_phi_).push_back(genparticleEvt->phi());
-	  (*genparticle_px_).push_back(genparticleEvt->px());
-	  (*genparticle_py_).push_back(genparticleEvt->py());
-	  (*genparticle_pz_).push_back(genparticleEvt->pz());
-	  (*genparticle_xi_).push_back(1 - abs(genparticleEvt->pz()) / EBeam_);
-	  (*recoparticle_pdgid_).push_back(recoparticleEvt->pdgId());
-	  (*recoparticle_energy_).push_back(recoparticleEvt->energy());
-	  (*recoparticle_pt_).push_back(recoparticleEvt->pt());
-	  (*recoparticle_eta_).push_back(recoparticleEvt->eta());
-	  (*recoparticle_phi_).push_back(recoparticleEvt->phi());
-	  (*recoparticle_px_).push_back(recoparticleEvt->px());
-	  (*recoparticle_py_).push_back(recoparticleEvt->py());
-	  (*recoparticle_pz_).push_back(recoparticleEvt->pz());
-	  (*recoparticle_xi_).push_back(1 - abs(recoparticleEvt->pz()) / EBeam_);
-	} 
+	  if(genparticleEvt->pdgId()==23){
+	    std::cout << "Boson Z: " << std::endl;
+	    std::cout << "\tStatus: " << genparticleEvt->status() << std::endl;
+	    std::cout << "\tpT [GeV]: " << genparticleEvt->pt() << std::endl;
+	    std::cout << "\teta [ua]: " << genparticleEvt->eta() << std::endl;
+	    std::cout << "\tphi [ua]: " << genparticleEvt->phi() << std::endl;
+	  }
+	}
       }
-    }
 
-    for(const auto& genjetEvt: genjetlist){
-      dR = 0;
-      for(const auto& recojetEvt: recojetlist){
-	//deltaR = ROOT::Math::VectorUtil::DeltaR(genjetEvt->p4(), recojetEvt->p4());
-	dR = deltaR(genjetEvt->eta(), genjetEvt->phi(), recojetEvt->eta(), recojetEvt->phi());
-	if(dR < 0.1 ){
-	  std::cout << "DeltaR jet: " << dR << std::endl;
-	  (*genjet_status_).push_back(genjetEvt->status());
-	  (*genjet_energy_).push_back(genjetEvt->energy());
-	  (*genjet_pt_).push_back(genjetEvt->pt());
-	  (*genjet_eta_).push_back(genjetEvt->eta());
-	  (*genjet_phi_).push_back(genjetEvt->phi());
-	  (*genjet_px_).push_back(genjetEvt->px());
-	  (*genjet_py_).push_back(genjetEvt->py());
-	  (*genjet_pz_).push_back(genjetEvt->pz());
-	  (*recojet_energy_).push_back(recojetEvt->energy());
-	  (*recojet_pt_).push_back(recojetEvt->pt());
-	  (*recojet_eta_).push_back(recojetEvt->eta());
-	  (*recojet_phi_).push_back(recojetEvt->phi());
-	  (*recojet_px_).push_back(recojetEvt->px());
-	  (*recojet_py_).push_back(recojetEvt->py());
-	  (*recojet_pz_).push_back(recojetEvt->pz());
-	} 
+      for (const auto& genjetEvt: genjetlist){
+	(*genjet_status_).push_back(genjetEvt->status());
+	(*genjet_pdgid_).push_back(genjetEvt->pdgId());
+	(*genjet_energy_).push_back(genjetEvt->energy());
+	(*genjet_pt_).push_back(genjetEvt->pt());
+	(*genjet_eta_).push_back(genjetEvt->eta());
+	(*genjet_phi_).push_back(genjetEvt->phi());
+	(*genjet_px_).push_back(genjetEvt->px());
+	(*genjet_py_).push_back(genjetEvt->py());
+	(*genjet_pz_).push_back(genjetEvt->pz());
+	if(DebugJets_){
+	  std::cout << " -- Jet: \t\tpt() " << genjetEvt->pt() << " [GeV], eta "<< genjetEvt->eta() << ", status "<< genjetEvt->status() << std::endl; 
+	}
+      }
+
+    }else{
+
+      for(const auto& genparticleEvt: genparticlelist){
+	dR = 0;
+	for(const auto& recoparticleEvt: recoparticlelist){
+	  //deltaR = ROOT::Math::VectorUtil::DeltaR(genparticleEvt->p4(), recoparticleEvt->p4());
+	  dR = deltaR(genparticleEvt->eta(), genparticleEvt->phi(), recoparticleEvt->eta(), recoparticleEvt->phi());
+	  if(dR < 0.1 ){
+	    (*genparticle_status_).push_back(genparticleEvt->status());
+	    (*genparticle_pdgid_).push_back(genparticleEvt->pdgId());
+	    (*genparticle_energy_).push_back(genparticleEvt->energy());
+	    (*genparticle_pt_).push_back(genparticleEvt->pt());
+	    (*genparticle_eta_).push_back(genparticleEvt->eta());
+	    (*genparticle_phi_).push_back(genparticleEvt->phi());
+	    (*genparticle_px_).push_back(genparticleEvt->px());
+	    (*genparticle_py_).push_back(genparticleEvt->py());
+	    (*genparticle_pz_).push_back(genparticleEvt->pz());
+	    (*genparticle_xi_).push_back(1 - abs(genparticleEvt->pz()) / EBeam_);
+	    (*recoparticle_pdgid_).push_back(recoparticleEvt->pdgId());
+	    (*recoparticle_energy_).push_back(recoparticleEvt->energy());
+	    (*recoparticle_pt_).push_back(recoparticleEvt->pt());
+	    (*recoparticle_eta_).push_back(recoparticleEvt->eta());
+	    (*recoparticle_phi_).push_back(recoparticleEvt->phi());
+	    (*recoparticle_px_).push_back(recoparticleEvt->px());
+	    (*recoparticle_py_).push_back(recoparticleEvt->py());
+	    (*recoparticle_pz_).push_back(recoparticleEvt->pz());
+	    (*recoparticle_xi_).push_back(1 - abs(recoparticleEvt->pz()) / EBeam_);
+	  } 
+	}
+      }
+
+      for(const auto& genjetEvt: genjetlist){
+	dR = 0;
+	for(const auto& recojetEvt: recojetlist){
+	  //deltaR = ROOT::Math::VectorUtil::DeltaR(genjetEvt->p4(), recojetEvt->p4());
+	  dR = deltaR(genjetEvt->eta(), genjetEvt->phi(), recojetEvt->eta(), recojetEvt->phi());
+	  if(dR < 0.1 ){
+	    (*genjet_status_).push_back(genjetEvt->status());
+	    (*genjet_energy_).push_back(genjetEvt->energy());
+	    (*genjet_pt_).push_back(genjetEvt->pt());
+	    (*genjet_eta_).push_back(genjetEvt->eta());
+	    (*genjet_phi_).push_back(genjetEvt->phi());
+	    (*genjet_px_).push_back(genjetEvt->px());
+	    (*genjet_py_).push_back(genjetEvt->py());
+	    (*genjet_pz_).push_back(genjetEvt->pz());
+	    (*recojet_energy_).push_back(recojetEvt->energy());
+	    (*recojet_pt_).push_back(recojetEvt->pt());
+	    (*recojet_eta_).push_back(recojetEvt->eta());
+	    (*recojet_phi_).push_back(recojetEvt->phi());
+	    (*recojet_px_).push_back(recojetEvt->px());
+	    (*recojet_py_).push_back(recojetEvt->py());
+	    (*recojet_pz_).push_back(recojetEvt->pz());
+	  } 
+	}
       }
     }
 
   }
+
   catch(...){
     std::cout << "There is no GEN collection" << std::endl;
   }
