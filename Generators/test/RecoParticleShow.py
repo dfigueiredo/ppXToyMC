@@ -1,28 +1,19 @@
 import sys
 import FWCore.ParameterSet.Config as cms
 
-miniAOD = False
+#fileinput = 'file:///afs/cern.ch/user/d/dmf/private/work/private/CMSPhysicsAnalysis/PrivateMCProduction/PPSMCProduction/working/RunIISummer20UL17RECO.root'
+fileinput = '/store/user/lpagliai/ZXToyMC-RECO_Electron_PostTS2_950_150_2020-03-11_UTC14-49-56/ZXToyMC-GEN_Electron_PostTS2_950_150/ZXToyMC-RECO_Electron_PostTS2_950_150_2020-03-11_UTC14-49-56/200311_135024/0000/output_24.root'
 
-fileinput = 'file:///afs/cern.ch/user/d/dmf/private/work/private/CMSPhysicsAnalysis/PrivateMCProduction/PPSMCProduction/working/RunIISummer20UL17RECO.root'
-#fileinput = 'file:///afs/cern.ch/user/d/dmf/private/work/private/CMSPhysicsAnalysis/PrivateMCProduction/PPSMCProduction/working/RunIISummer20UL17GEN.root'
-#fileinput = '/store/user/dmf/ZXToyMC-13TeV-miniAOD_2020-03-23_UTC13-55-30/ZXToyMC-GEN_Muon_PostTS2_950_150/ZXToyMC-13TeV-miniAOD_2020-03-23_UTC13-55-30/200323_125619/0000/output_22.root'
+recotag = 'particleFlow'
+recojettag = 'ak4PFJets'
 
-
-gentag = ''
-genjettag = ''
-
-if miniAOD:
-  gentag = 'prunedGenParticles'
-  genjettag = 'slimmedGenJets'
-else:
-  gentag = 'genParticles'
-  genjettag = 'ak4GenJets'
-
+gentag = 'genParticles'
+genjettag = 'ak4GenJets'
 
 process = cms.Process('Analysis')
 
 #-----------------
-# General options
+# Recoeral options
 #-----------------
 
 process.load("FWCore.MessageService.MessageLogger_cfi")
@@ -53,19 +44,22 @@ process.load("TrackingTools.TransientTrack.TransientTrackBuilder_cfi")
 #---------------
 # Proton Filter     
 #---------------
-process.genParticle = cms.EDAnalyzer("GenParticleShow",
-					    GenPartTag = cms.InputTag(gentag),
-					    GenJetTag = cms.InputTag(genjettag),
+process.recoParticle = cms.EDAnalyzer("RecoParticleShow",
+					    RecoPartTag = cms.InputTag(recotag),
+					    RecoJetTag = cms.InputTag(recojettag),
+                                            GenPartTag = cms.InputTag(gentag),
+                                            GenJetTag = cms.InputTag(genjettag),
 					    EBeam = cms.double(6500.),
-					    DebugProtons = cms.bool(True),
-					    DebugPF = cms.bool(True),
+					    MatchingMC = cms.bool(True),
+					    DebugProtons = cms.bool(False),
+					    DebugPF = cms.bool(False),
 					    DebugJets = cms.bool(False)
 					)
 
 # prepare the output file
 process.TFileService = cms.Service('TFileService',
-    fileName = cms.string("gen_output.root"),
+    fileName = cms.string("reco_output.root"),
     closeFileFast = cms.untracked.bool(True)
 )
 
-process.p = cms.Path(process.genParticle)
+process.p = cms.Path(process.recoParticle)
