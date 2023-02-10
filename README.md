@@ -20,8 +20,10 @@ scram b -j 8
 
 ```bash
 cd test/
-cmsRun XHToyMC_LHE.py (or XZToyMC_LHE.py) 
+cmsRun XHToyMC_LHE.py (or XZToyMC_LHE.py) Mass=800 (by default this parameter is 900 GeV) 
 ```
+
+In case you would like to change other MC generator parameters, edit the file python/PPSToyMcLHE_XH_cfi.py or python/PPSToyMcLHE_XZ_cfi.py for each decay case.
 
 ## Validation
 

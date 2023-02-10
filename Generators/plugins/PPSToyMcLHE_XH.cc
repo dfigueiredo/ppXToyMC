@@ -212,7 +212,7 @@ void PPSToyMcLHE_XH::fillEventLHE(lhef::HEPEUP &outlhe,
     outlhe.MOTHUP[index].first = 1;
     outlhe.MOTHUP[index].second = 2;
   }
-  else if (std::abs(pdgid) == 25 || std::abs(pdgid) == 1000022) {
+  else if (std::abs(pdgid) == 25 || std::abs(pdgid) == particleId_X) {
     outlhe.ICOLUP[index].first = 0;
     outlhe.ICOLUP[index].second = 0;
     outlhe.MOTHUP[index].first = 5;
